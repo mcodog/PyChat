@@ -9,6 +9,21 @@ from bson.objectid import ObjectId
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
+from g4f.client import Client
+
+client = Client()
+
+
+def chat_with_gpt(prompt):
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        # Add any other necessary parameters
+    )
+    return response.choices[0].message.content
+
+chat_with_gpt("Hello there, what is your name?")
+
 db = settings.MONGO_DB
 chats_collection = db['chats']
 messages_collection = db['messages']
@@ -96,8 +111,10 @@ class ChatMessageCreateView(View):
         if not original_message:
             return JsonResponse({"error": "Original message not found."}, status=404)
         
+        gpt_response = chat_with_gpt(original_message["message"])
+        print("gpt:", gpt_response)
         new_message = {
-            "message": "You said " + original_message["message"],
+            "message": gpt_response,
             "sender": "PyChat",
             "timestamp": timezone.now()
         }

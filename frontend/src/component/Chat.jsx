@@ -27,39 +27,59 @@ const Chat = () => {
 
   const sendNewChat = async (message) => {
     try {
-      const formData = { message: message, sender: "User" }
-      const res = await axios.post(`http://localhost:8000/api/chats/6731ee2f2e118cfd5f9f9bae/messages/`, formData, {
-        headers: {
-          'Content-Type': 'application/json',
+      const formData = { message: message, sender: "User" };
+      const res = await axios.post(
+        `http://localhost:8000/api/chats/6731ee2f2e118cfd5f9f9bae/messages/`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
-      })
-      setMessages((prevMessages) => [...prevMessages, { content: res.data.message, sender: res.data.sender }])
-
+      );
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { content: res.data.message, sender: res.data.sender },
+      ]);
+  
       if (res.data.message.trim()) {
-        
         const speech = new SpeechSynthesisUtterance(res.data.message);
         speech.lang = "en-US";
         speech.pitch = 1;
         speech.rate = 1;
-
+  
+        // Set the onstart and onend callbacks for speech synthesis
         speech.onstart = () => setIsSpeaking(true);
-        speech.onend = () => setIsSpeaking(false);
-        setIsListening(false)
+        speech.onend = () => {
+          setIsSpeaking(false);
+          setIsListening(false);
+  
+          // Proceed with the rest of the logic after speech has ended
+          setRepeater((prevRepeater) => prevRepeater + 1);
+  
+          if (res.data.message === "exit") {
+            setIsListening(false);
+          } else {
+            setIsListening(true);
+          }
+        };
+  
+        // Speak the message
         window.speechSynthesis.speak(speech);
+      } else {
+        setRepeater((prevRepeater) => prevRepeater + 1);
+  
+        if (res.data.message === "exit") {
+          setIsListening(false);
+        } else {
+          setIsListening(true);
+        }
       }
-
-      setRepeater((prevRepeater) => prevRepeater + 1);
-      
-      if (res.data.message == 'exit') {
-        setIsListening(false);
-      } else{
-        setIsListening(true);
-      }
-      
     } catch (e) {
-      console.log(e)
+      console.log(e);
     }
-  }
+  };
+  
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -189,7 +209,9 @@ const Chat = () => {
         window.speechSynthesis.speak(speech);
       }
       setTranscript('');
-      recognition.start();
+      setTimeout(() => {
+        recognition.start();
+      }, 1500);
     } else {
       recognition.stop();
     }

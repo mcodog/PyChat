@@ -111,10 +111,12 @@
 
 .pychat-message .chat-content {
     background-color: #ff495b;
+    max-width: 90%;
 }
 
 .user-message .chat-content {
     background-color: rgb(0, 0, 0);
+    max-width: 90%;
 }
 
 .chat-content {
